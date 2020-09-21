@@ -1,0 +1,157 @@
+html, body, ul, li, span, h1, button{
+  padding: 0;
+  margin: 0;
+  
+  font-family: sans-serif;
+
+  user-select:none;
+  background-color: #809CA9;
+}
+
+ul{
+  list-style: none;
+}
+
+.root{
+ width: 100%;
+}
+
+.content{
+  margin: 0 auto;
+  width: 25em;
+}
+
+.heading{
+  font-size: 24pt;
+  font-weight: 900;
+  text-align: center;
+  padding: .5em;
+  color: #efefef;
+}
+
+.tabs{
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.modeButton{
+  text-align: center;
+  border: 2px solid #000;
+  border-bottom: none;
+  padding: .5em 0 .5em 0;
+  border-radius: 1em 1em 0 0;
+}
+
+.activeButton{
+  color: #333;
+  background-color: #83D4D8;
+}
+
+.inactiveButton{
+  color: #444;
+  background-color: #aaa;
+  border-bottom: 2px solid #000;
+}
+
+.inactiveButton:hover{
+  cursor: pointer;
+  background-color: #bbb;
+}
+
+.modeContent{
+  padding: 2em;
+  background-color: #83D4D8;
+  border-left: 2px solid #000;
+  border-bottom: 2px solid #000;
+  border-right: 2px solid #000;
+
+  border-radius: 0 0 1em 1em;
+}
+
+.scheduledContent, .manualContent{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.counts{
+  color: #555;
+  font-style: italic;
+}
+
+.manualAreas, .scheduledAreas{
+  background-color: #777;
+  padding: 1em;
+  border-radius: .75em;
+  border: 2px solid #333;
+}
+
+.scheduledArea, .manualArea{
+  margin-top: .25em;
+  display: flex;
+  align-content: center;
+  flex-direction: row;
+}
+
+.manualButton{
+  position: relative;  
+  width: 4em;
+  height: 2em;
+  border-radius: 1em;
+}
+
+.manualButton::after{
+  content: '';
+  position: absolute;
+  width: 1.8em;
+  height: 1.8em;
+  border-radius: 1em;
+  background-color: #fff;
+  top: .1em; 
+  left: .1em;
+  transition: all 0.3s;
+}
+
+.manualButton.stop::after {
+  left: 2.1em;
+}
+
+.manualButton.start{
+  color: #fff;
+  background-color: #333;
+}
+
+.manualButton.stop{
+  color: #fff;
+  background-color: #20df33;
+}
+
+
+.activeAreaIndicator, .inactiveAreaIndicator{
+  display:inline-block;
+  height: 1em;
+  width: 1em;
+  border-radius: .5em;
+  margin-right: .5em;
+}
+
+.areaName{
+  display: inline-block;
+  margin-left: .5em;
+  color: #ccc;
+  font-weight: 700;
+  padding-top: .4em
+}
+
+.activeAreaIndicator{
+  background-color: #0f0;
+
+}
+
+.inactiveAreaIndicator{
+  background-color: #555;
+
+}
+
+

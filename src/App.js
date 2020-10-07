@@ -2,7 +2,7 @@ import React from 'react';
 import './App.css';
 import ReactDOM from 'react-dom';
 
-var api_url = 'http://localhost:5000'
+var api_url = 'http://192.168.1.243' + ':5000' //192.168.1.243
 
 function api_getStatus(){
     return fetch(api_url + '/status/')
@@ -27,6 +27,11 @@ function api_activateArea(areaId){
 function api_deactivate(){
     return fetch(api_url + '/deactivate/')
             .then(res => res.json())  
+}
+
+function api_setSchedule(dayOfWeek, timeOfDay, areaId){
+    return fetch(api_url + '/set_schedule/'+dayOfWeek+'/'+timeOfDay+'/'+areaId+'/')
+        .then(res => res.json())
 }
 
 const daysOfWeek = ['Sun', 'Mon', 'Tues', 'Wed', 'Thurs', 'Fri', 'Sat']
@@ -56,6 +61,7 @@ class App extends React.Component{
 
         this.state = {
             manualMode : true,      //manual vs automatic
+            addingSchedule : false,
             wateringAreas : [],     //list of all watering area states
             wateringSchedules : [], //list of all watering schedules
         }
@@ -63,6 +69,11 @@ class App extends React.Component{
         //could combine these, but wouldnt allow for pure components
         this.setManualMode = this.setManualMode.bind(this)
         this.setAutomaticMode = this.setAutomaticMode.bind(this)
+        this.startAddingSchedule = this.startAddingSchedule.bind(this)
+        this.finishAddingSchedule = this.finishAddingSchedule.bind(this)
+        this.submitNewSchedule = this.submitNewSchedule.bind(this)
+        this.deleteScheduledArea = this.deleteScheduledArea.bind(this)
+
         this.activateArea = this.activateArea.bind(this)
         this.deactivateAllAreas = this.deactivateAllAreas.bind(this)
 
@@ -79,6 +90,32 @@ class App extends React.Component{
         if(this.state.manualMode)
             return api_setAutomaticMode()      
                 .then(this.refreshState)     
+    }
+
+    startAddingSchedule(){
+        this.setState({
+            addingSchedule : true
+        })
+    }
+
+    finishAddingSchedule(){
+        this.setState({
+            addingSchedule : false
+        })
+    }
+
+    submitNewSchedule(dayOfWeek, timeOfDay, areaId){
+        console.log('/submitNewSchedule /'+dayOfWeek+'/'+timeOfDay+'/'+areaId+'/')
+
+        return api_setSchedule(dayOfWeek, timeOfDay, areaId)
+            .then(this.refreshState)
+    }
+
+    deleteScheduledArea(dayOfWeek, timeOfDay){
+        console.log('/submitNewSchedule /'+dayOfWeek+'/'+timeOfDay+'/null/')
+
+        return api_setSchedule(dayOfWeek, timeOfDay, 'null')
+            .then(this.refreshState)
     }
 
     activateArea(areaId){
@@ -135,9 +172,14 @@ class App extends React.Component{
                 wateringSchedules={this.state.wateringSchedules}
 
                 setManualMode={this.setManualMode}
-                setAutomaticMode={this.setAutomaticMode}
                 activateArea={this.activateArea}
                 deactivateAllAreas={this.deactivateAllAreas}
+
+                setAutomaticMode={this.setAutomaticMode}
+                startAddingSchedule={this.startAddingSchedule}
+                finishAddingSchedule={this.finishAddingSchedule}
+                submitNewSchedule={this.submitNewSchedule}
+                deleteScheduledArea={this.deleteScheduledArea}
             ></WateringSystem>
         )
     }
@@ -161,7 +203,12 @@ const WateringSystem = (props) => {
                         deactivateAllAreas={props.deactivateAllAreas}></ManualWatering>
                     :
                     <ScheduledWatering
-                        wateringSchedules={props.wateringSchedules}></ScheduledWatering>
+                        wateringAreas={props.wateringAreas}
+                        wateringSchedules={props.wateringSchedules}
+                        startAddingSchedule={props.startAddingSchedule}
+                        finishAddingSchedule={props.finishAddingSchedule}
+                        submitNewSchedule={props.submitNewSchedule}
+                        deleteScheduledArea={props.deleteScheduledArea}></ScheduledWatering>
                 }
             </div>
         </div>
@@ -186,7 +233,17 @@ const TabbedSystemMode = (props) => {
 const ScheduledWatering = (props) => {
     return (
         <div className="scheduledContent">
-            <div className="counts">{props.wateringSchedules.length} schedules</div>
+            <div className="counts">{props.wateringSchedules.length} schedules
+                {props.addingSchedule ? 
+                    <div className="addSchedule add" onClick={props.startAddingSchedule}>Add</div>
+                    :
+                    <div className="addSchedule done" onClick={props.finishAddingSchedule}>Done</div>
+                }
+            </div>
+
+            <NewSchedulePanel 
+                wateringAreas={props.wateringAreas}
+                submitNewSchedule={props.submitNewSchedule}></NewSchedulePanel>
 
             <div className="scheduledAreas">
                 {props.wateringSchedules.map((schedule, idx) => 
@@ -195,11 +252,88 @@ const ScheduledWatering = (props) => {
                         dayOfWeek={schedule.dayOfWeek}
                         timeOfDay={schedule.timeOfDay}
                         name={schedule.name}
-                        active={schedule.active}></ScheduledArea>)}
+                        active={schedule.active}
+                        deleteScheduledArea={() => { props.deleteScheduledArea(schedule.dayOfWeek,schedule.timeOfDay) }}></ScheduledArea>)}
             </div>
         </div>
     )
 }
+
+class NewSchedulePanel extends React.Component{
+    constructor(props){
+        super(props)
+
+        this.state = {
+            wateringAreas : props.wateringAreas,
+            submitNewSchedule : props.submitNewSchedule,
+
+            dayOfWeek : 0,
+            timeOfDay : 0,
+            areaId : 0
+        }
+
+        this.dayChange = this.dayChange.bind(this)
+        this.timeChange = this.timeChange.bind(this)
+        this.areaChange = this.areaChange.bind(this)
+        this.submitNewSchedule = this.submitNewSchedule.bind(this)
+    }
+
+    dayChange(e){
+        var dayId = e.target.value
+        this.setState({dayOfWeek : dayId})
+    }
+
+    timesOfDay(){
+        var times = []
+
+        for(var i = 0; i < 96; i++){
+            times.push(formatTimeOfDay(i))
+        }
+
+        return times
+    }
+
+    timeChange(e){
+        var timeOfDay = e.target.value
+        this.setState({timeOfDay : timeOfDay})
+    }
+
+    areaChange(e){
+
+        var areaId = e.target.value
+        this.setState({areaId : areaId})
+    }
+
+    submitNewSchedule(){
+        this.state.submitNewSchedule(
+            this.state.dayOfWeek,
+            this.state.timeOfDay,
+            this.state.areaId
+        )
+    }
+
+    render(){
+        return (
+            <div className="scheduleEdit">
+                <select value={this.state.dayOfWeek} onChange={this.dayChange}>
+                    {daysOfWeek.map((dayName, i) => <option key={i} value={i}>{dayName}</option>)}
+                </select>
+
+                <select value={this.state.timeOfDay} onChange={this.timeChange}>
+                    {this.timesOfDay().map((time, i) => <option key={i} value={i}>{time}</option>)}
+                </select>
+
+                <select value={this.state.areaId} onChange={this.areaChange}>
+                    {this.state.wateringAreas.map((area, i) => <option key={i} value={area.areaId}>{area.name}</option>)}
+                </select>
+
+                <button onClick={this.submitNewSchedule}>Add</button>
+
+            </div>
+        )
+    }
+}
+
 
 const ScheduledArea = (props) => {
     return (
@@ -209,6 +343,7 @@ const ScheduledArea = (props) => {
                 {daysOfWeek[props.dayOfWeek]} {formatTimeOfDay(props.timeOfDay)} - 
             </div>
             <div className="areaName">{props.name}</div>
+            <div className="deleteSchedule" onClick={props.deleteScheduledArea}>X</div>
         </div>)
 }
 
@@ -220,18 +355,18 @@ const ManualWatering = (props) => {
 
             <div className="manualAreas">
                 {props.wateringAreas.map((area, idx) => 
-                    <ControlledArea 
+                    <ManualArea 
                         key={idx}
                         name={area.name} 
                         active={area.active}
                         activateArea={() => props.activateArea(area.areaId)}
-                        deactivateAllAreas={props.deactivateAllAreas}></ControlledArea>)}
+                        deactivateAllAreas={props.deactivateAllAreas}></ManualArea>)}
             </div>
         </div>
     )
 }
 
-const ControlledArea = (props) => {
+const ManualArea = (props) => {
     return (
         <div className="manualArea">
             {props.active ? 

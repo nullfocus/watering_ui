@@ -6,6 +6,7 @@ html, body, ul, li, span, h1, button{
 
   user-select:none;
   background-color: #809CA9;
+
 }
 
 ul{
@@ -47,6 +48,7 @@ ul{
   background-color: #83D4D8;
 }
 
+
 .inactiveButton{
   color: #444;
   background-color: #aaa;
@@ -56,6 +58,26 @@ ul{
 .inactiveButton:hover{
   cursor: pointer;
   background-color: #bbb;
+}
+
+.activeButton::before, .inactiveButton::before{
+  content: '';
+  display: inline-block;
+  width: .65em;
+  height: .65em;
+  color: transparent;
+  border: 1px solid #000;
+  border-radius: 1em;
+  overflow:hidden;
+  margin-right: .5em;
+}
+
+.activeButton::before{
+  background-color: #0f0;
+}
+
+.inactiveButton::before{
+  background-color: #777;
 }
 
 .modeContent{
@@ -146,12 +168,10 @@ ul{
 
 .activeAreaIndicator{
   background-color: #0f0;
-
 }
 
 .inactiveAreaIndicator{
   background-color: #555;
-
 }
 
 

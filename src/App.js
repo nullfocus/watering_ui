@@ -2,7 +2,7 @@ import React from 'react';
 import './App.css';
 import ReactDOM from 'react-dom';
 
-var api_url = 'http://192.168.1.243' + ':5000' //192.168.1.243
+var api_url = 'http://' + window.location.host + ':5000'
 
 function api_getStatus(){
     return fetch(api_url + '/status/')
